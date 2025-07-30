@@ -1,3 +1,4 @@
+# openhands/storage/local.py
 import os
 import shutil
 
@@ -22,13 +23,21 @@ class LocalFileStore(FileStore):
     def write(self, path: str, contents: str | bytes) -> None:
         full_path = self.get_full_path(path)
         os.makedirs(os.path.dirname(full_path), exist_ok=True)
-        mode = 'w' if isinstance(contents, str) else 'wb'
-        with open(full_path, mode) as f:
+        # Определяем режим и кодировку
+        if isinstance(contents, str):
+            mode = 'w'
+            encoding = 'utf-8'
+        else:
+            mode = 'wb'
+            encoding = None
+        # Записываем файл с явным указанием кодировки для текста
+        with open(full_path, mode, encoding=encoding) as f:
             f.write(contents)
 
     def read(self, path: str) -> str:
         full_path = self.get_full_path(path)
-        with open(full_path, 'r') as f:
+        # Читаем файл с явным указанием кодировки UTF-8
+        with open(full_path, 'r', encoding='utf-8') as f:
             return f.read()
 
     def list(self, path: str) -> list[str]:
