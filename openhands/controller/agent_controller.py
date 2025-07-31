@@ -77,6 +77,7 @@ from openhands.llm.llm import LLM
 from openhands.llm.metrics import Metrics
 from openhands.runtime.runtime_status import RuntimeStatus
 from openhands.storage.files import FileStore
+from openhands.extensions.long_term_memory.manager import LongTermMemoryManager
 
 # note: RESUME is only available on web GUI
 TRAFFIC_CONTROL_REMINDER = (
@@ -181,6 +182,7 @@ class AgentController:
 
         # Add the system message to the event stream
         self._add_system_message()
+        self.ltm_manager = LongTermMemoryManager(session_id=self.id)
 
     def _add_system_message(self):
         for event in self.event_stream.search_events(start_id=self.state.start_id):

@@ -33,7 +33,9 @@ services:
       - openhands_network
 
   chroma:
-    image: chromadb/chroma:0.5.3
+    build:
+      context: ./chroma_fix
+      dockerfile: Dockerfile
     container_name: openhands-chroma
     ports:
       - "8000:8000"
