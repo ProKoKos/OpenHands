@@ -1,3 +1,4 @@
+version: '3.8'
 
 services:
   openhands:
@@ -6,13 +7,14 @@ services:
       dockerfile: ./containers/app/Dockerfile
     image: openhands:latest
     container_name: openhands-app-${DATE:-}
-    # Используем сеть хоста для решения проблем с WebSocket
-    #network_mode: "host"
     environment:
       - SANDBOX_RUNTIME_CONTAINER_IMAGE=${SANDBOX_RUNTIME_CONTAINER_IMAGE:-docker.all-hands.dev/all-hands-ai/runtime:0.50-nikolaik}
-      #- SANDBOX_USER_ID=${SANDBOX_USER_ID:-1234} # enable this only if you want a specific non-root sandbox user but you will have to manually adjust permissions of ~/.openhands for this user
       - WORKSPACE_MOUNT_PATH=${WORKSPACE_BASE:-$PWD/workspace}
-    # Секция 'ports' не нужна в режиме network_mode: "host"
+      # Добавляем переменную окружения для подключения к ChromaDB
+      - CHROMA_HOST=chroma
+      # Передаем API ключ и модель, если они заданы
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_MODEL=${LLM_MODEL}
     ports:
       - "3000:3000"
     extra_hosts:
@@ -24,3 +26,26 @@ services:
     pull_policy: build
     stdin_open: true
     tty: true
+    # Добавляем зависимость и подключение к сети
+    depends_on:
+      - chroma
+    networks:
+      - openhands_network
+
+  chroma:
+    image: chromadb/chroma:0.5.3
+    container_name: openhands-chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - openhands_network
+
+volumes:
+  chroma_data:
+    driver: local
+
+networks:
+  openhands_network:
+    driver: bridge
