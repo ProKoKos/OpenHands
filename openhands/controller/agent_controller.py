@@ -486,12 +486,27 @@ class AgentController:
             if self.state.agent_state == AgentState.AWAITING_USER_CONFIRMATION:
                 return
 
-            self._pending_action = None
+            # ======================================================================
+            # НАЧАЛО ИЗМЕНЕНИЙ: Запоминание (ПЕРЕМЕЩЕНО ВВЕРХ)
+            # ======================================================================
+            # Сохраняем наблюдение в долгосрочную память ПЕРЕД тем, как сбросить pending_action
+            if observation.content and hasattr(self._pending_action, 'action'):
+                self.ltm_manager.add_memory(
+                    content=observation.content,
+                    metadata={"action": self._pending_action.action, "cause": str(self._pending_action.id)}
+                )
+                logger.info("LTM: Saved observation to long-term memory.")
+            # ======================================================================
+            # КОНЕЦ ИЗМЕНЕНИЙ
+            # ======================================================================
+
+            self._pending_action = None # Теперь можно безопасно сбросить
 
             if self.state.agent_state == AgentState.USER_CONFIRMED:
                 await self.set_agent_state_to(AgentState.RUNNING)
             if self.state.agent_state == AgentState.USER_REJECTED:
                 await self.set_agent_state_to(AgentState.AWAITING_USER_INPUT)
+
             return
 
     async def _handle_message_action(self, action: MessageAction) -> None:
@@ -760,6 +775,26 @@ class AgentController:
 
     async def _step(self) -> None:
         """Executes a single step of the parent or delegate agent. Detects stuck agents and limits on the number of iterations and the task budget."""
+
+        # ======================================================================
+        # НАЧАЛО ИЗМЕНЕНИЙ: Вспоминание
+        # ======================================================================
+        # Получаем последнее сообщение от пользователя
+        last_user_message = self._first_user_message()
+        if last_user_message:
+            recalled_memories = self.ltm_manager.search_memory(last_user_message.content)
+            if recalled_memories:
+                # Создаем системное сообщение с воспоминаниями
+                memory_content = "\n".join(recalled_memories)
+                # Добавляем это сообщение в историю, чтобы LLM его увидела
+                self.state.history.append(SystemMessageAction(
+                    content=f"This is relevant information from long-term memory:\n{memory_content}",
+                ))
+                logger.info("LTM: Injected recalled memories into current context.")
+        # ======================================================================
+        # КОНЕЦ ИЗМЕНЕНИЙ
+        # ======================================================================
+
         if self.get_agent_state() != AgentState.RUNNING:
             self.log(
                 'debug',
