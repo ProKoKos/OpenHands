@@ -47,6 +47,7 @@ function LlmSettingsScreen() {
     agent: false,
     confirmationMode: false,
     enableDefaultCondenser: false,
+    enable_long_term_memory: false, // ИЗМЕНЕНИЕ 1
     securityAnalyzer: false,
   });
 
@@ -97,6 +98,7 @@ function LlmSettingsScreen() {
       agent: false,
       confirmationMode: false,
       enableDefaultCondenser: false,
+      enable_long_term_memory: false, // ИЗМЕНЕНИЕ 2
       securityAnalyzer: false,
     });
   };
@@ -129,6 +131,7 @@ function LlmSettingsScreen() {
         CONFIRMATION_MODE: DEFAULT_SETTINGS.CONFIRMATION_MODE,
         SECURITY_ANALYZER: DEFAULT_SETTINGS.SECURITY_ANALYZER,
         ENABLE_DEFAULT_CONDENSER: DEFAULT_SETTINGS.ENABLE_DEFAULT_CONDENSER,
+        ENABLE_LONG_TERM_MEMORY: DEFAULT_SETTINGS.ENABLE_LONG_TERM_MEMORY, // ИЗМЕНЕНИЕ 3
       },
       {
         onSuccess: handleSuccessfulMutation,
@@ -147,6 +150,8 @@ function LlmSettingsScreen() {
       formData.get("enable-confirmation-mode-switch")?.toString() === "on";
     const enableDefaultCondenser =
       formData.get("enable-memory-condenser-switch")?.toString() === "on";
+    const enableLongTermMemory = // ИЗМЕНЕНИЕ 4
+      formData.get("enable-long-term-memory-switch")?.toString() === "on";
     const securityAnalyzer = formData
       .get("security-analyzer-input")
       ?.toString();
@@ -160,6 +165,7 @@ function LlmSettingsScreen() {
         AGENT: agent,
         CONFIRMATION_MODE: confirmationMode,
         ENABLE_DEFAULT_CONDENSER: enableDefaultCondenser,
+        ENABLE_LONG_TERM_MEMORY: enableLongTermMemory, // ИЗМЕНЕНИЕ 5
         SECURITY_ANALYZER: confirmationMode ? securityAnalyzer : undefined,
       },
       {
@@ -185,6 +191,7 @@ function LlmSettingsScreen() {
       agent: false,
       confirmationMode: false,
       enableDefaultCondenser: false,
+      enable_long_term_memory: false, // ИЗМЕНЕНИЕ 6
       securityAnalyzer: false,
     });
   };
@@ -311,7 +318,7 @@ function LlmSettingsScreen() {
                       text={t(I18nKey.SETTINGS$OPENHANDS_API_KEY_HELP_TEXT)}
                       linkText={t(I18nKey.SETTINGS$NAV_API_KEYS)}
                       href="https://app.all-hands.dev/settings/api-keys"
-                      suffix={t(I18nKey.SETTINGS$OPENHANDS_API_KEY_HELP_SUFFIX)}
+                      suffix={t(I18nKey.SETTINGS$OPENHANDS_API_KEY_HELP_SUFFIX )}
                     />
                   )}
                 </>
@@ -342,7 +349,7 @@ function LlmSettingsScreen() {
               <SettingsInput
                 testId="search-api-key-input"
                 name="search-api-key-input"
-                label={t(I18nKey.SETTINGS$SEARCH_API_KEY)}
+                label={t(I18nKey.SETTINGS$SEARCH_API_KEY )}
                 type="password"
                 className="w-full max-w-[680px]"
                 defaultValue={settings.SEARCH_API_KEY || ""}
@@ -362,7 +369,7 @@ function LlmSettingsScreen() {
                 href="https://tavily.com/"
               />
             </div>
-          )}
+           )}
 
           {view === "advanced" && (
             <div
@@ -386,7 +393,7 @@ function LlmSettingsScreen() {
                   text={t(I18nKey.SETTINGS$OPENHANDS_API_KEY_HELP_TEXT)}
                   linkText={t(I18nKey.SETTINGS$NAV_API_KEYS)}
                   href="https://app.all-hands.dev/settings/api-keys"
-                  suffix={t(I18nKey.SETTINGS$OPENHANDS_API_KEY_HELP_SUFFIX)}
+                  suffix={t(I18nKey.SETTINGS$OPENHANDS_API_KEY_HELP_SUFFIX )}
                 />
               )}
 
@@ -404,7 +411,7 @@ function LlmSettingsScreen() {
               <SettingsInput
                 testId="llm-api-key-input"
                 name="llm-api-key-input"
-                label={t(I18nKey.SETTINGS_FORM$API_KEY)}
+                label={t(I18nKey.SETTINGS_FORM$API_KEY )}
                 type="password"
                 className="w-full max-w-[680px]"
                 placeholder={settings.LLM_API_KEY_SET ? "<hidden>" : ""}
@@ -425,7 +432,7 @@ function LlmSettingsScreen() {
               <SettingsInput
                 testId="search-api-key-input"
                 name="search-api-key-input"
-                label={t(I18nKey.SETTINGS$SEARCH_API_KEY)}
+                label={t(I18nKey.SETTINGS$SEARCH_API_KEY )}
                 type="password"
                 className="w-full max-w-[680px]"
                 defaultValue={settings.SEARCH_API_KEY || ""}
@@ -448,7 +455,7 @@ function LlmSettingsScreen() {
               <SettingsDropdownInput
                 testId="agent-input"
                 name="agent-input"
-                label={t(I18nKey.SETTINGS$AGENT)}
+                label={t(I18nKey.SETTINGS$AGENT )}
                 items={
                   resources?.agents.map((agent) => ({
                     key: agent,
@@ -496,6 +503,19 @@ function LlmSettingsScreen() {
                 isBeta
               >
                 {t(I18nKey.SETTINGS$CONFIRMATION_MODE)}
+              </SettingsSwitch>
+
+              {/* ИЗМЕНЕНИЕ 7: НАШ НОВЫЙ ПЕРЕКЛЮЧАТЕЛЬ */}
+              <SettingsSwitch
+                testId="enable-long-term-memory-switch"
+                name="enable-long-term-memory-switch"
+                defaultIsToggled={settings.ENABLE_LONG_TERM_MEMORY}
+                onToggle={(isToggled) => {
+                  const isDirty = isToggled !== settings.ENABLE_LONG_TERM_MEMORY;
+                  setDirtyInputs((prev) => ({ ...prev, enable_long_term_memory: isDirty }));
+                }}
+              >
+                Enable Long-Term Memory
               </SettingsSwitch>
 
               {securityAnalyzerInputIsVisible && (

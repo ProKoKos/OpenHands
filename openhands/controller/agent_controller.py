@@ -490,12 +490,14 @@ class AgentController:
             # НАЧАЛО ИЗМЕНЕНИЙ: Запоминание (ПЕРЕМЕЩЕНО ВВЕРХ)
             # ======================================================================
             # Сохраняем наблюдение в долгосрочную память ПЕРЕД тем, как сбросить pending_action
-            if observation.content and hasattr(self._pending_action, 'action'):
-                self.ltm_manager.add_memory(
-                    content=observation.content,
-                    metadata={"action": self._pending_action.action, "cause": str(self._pending_action.id)}
-                )
-                logger.info("LTM: Saved observation to long-term memory.")
+            # Проверяем, включена ли память в настройках И существует ли менеджер
+            if hasattr(self.state, 'settings') and self.state.settings.enable_long_term_memory and self.ltm_manager:
+                if observation.content and hasattr(self._pending_action, 'action'):
+                    self.ltm_manager.add_memory(
+                        content=observation.content,
+                        metadata={"action": self._pending_action.action, "cause": str(self._pending_action.id)}
+                    )
+                    logger.info("LTM: Saved observation to long-term memory.")
             # ======================================================================
             # КОНЕЦ ИЗМЕНЕНИЙ
             # ======================================================================
@@ -780,17 +782,17 @@ class AgentController:
         # НАЧАЛО ИЗМЕНЕНИЙ: Вспоминание
         # ======================================================================
         # Получаем последнее сообщение от пользователя
-        last_user_message = self._first_user_message()
-        if last_user_message:
-            recalled_memories = self.ltm_manager.search_memory(last_user_message.content)
-            if recalled_memories:
-                # Создаем системное сообщение с воспоминаниями
-                memory_content = "\n".join(recalled_memories)
-                # Добавляем это сообщение в историю, чтобы LLM его увидела
-                self.state.history.append(SystemMessageAction(
-                    content=f"This is relevant information from long-term memory:\n{memory_content}",
-                ))
-                logger.info("LTM: Injected recalled memories into current context.")
+        # Проверяем, включена ли память в настройках И существует ли менеджер
+        if hasattr(self.state, 'settings') and self.state.settings.enable_long_term_memory and self.ltm_manager:
+            last_user_message = self._first_user_message()
+            if last_user_message:
+                recalled_memories = self.ltm_manager.search_memory(last_user_message.content)
+                if recalled_memories:
+                    memory_content = "\n".join(recalled_memories)
+                    self.state.history.append(SystemMessageAction(
+                        content=f"This is relevant information from long-term memory:\n{memory_content}",
+                    ))
+                    logger.info("LTM: Injected recalled memories into current context.")
         # ======================================================================
         # КОНЕЦ ИЗМЕНЕНИЙ
         # ======================================================================

@@ -45,6 +45,8 @@ class Settings(BaseModel):
     max_budget_per_task: float | None = None
     email: str | None = None
     email_verified: bool | None = None
+    # Долгосрочная память
+    enable_long_term_memory: bool = False # По умолчанию выключено
 
     model_config = ConfigDict(
         validate_assignment=True,
