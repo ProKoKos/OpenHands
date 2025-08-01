@@ -34,18 +34,21 @@ services:
 
   chroma:
     build:
-      context: ./chroma_fix
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./chroma_fix/Dockerfile
     container_name: openhands-chroma
     ports:
       - "8000:8000"
     volumes:
       - chroma_data:/chroma/chroma
+      - chroma_cache:/root/.cache
     networks:
       - openhands_network
 
 volumes:
   chroma_data:
+    driver: local
+  chroma_cache:
     driver: local
 
 networks:

@@ -254,3 +254,7 @@ containers/runtime/Dockerfile
 containers/runtime/project.tar.gz
 containers/runtime/code
 **/node_modules/
+
+# Файлы зависимостей для кастомной сборки ChromaDB
+chroma_fix/poetry.lock
+chroma_fix/pyproject.toml
